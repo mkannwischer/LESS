@@ -24,6 +24,7 @@
  **/
 
 #include "utils.h"
+#include "fips202.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -32,24 +33,30 @@ void compute_digest( uint8_t digest[HASH_DIGEST_LENGTH],
                      const uint64_t mlen,
                      normalized_IS_t V_array[T],
                      const unsigned char tree_salt[HASH_DIGEST_LENGTH]) {
-   unsigned char* message_buffer = malloc( T*sizeof(normalized_IS_t)+ mlen + HASH_DIGEST_LENGTH);
-
-   memcpy(message_buffer, V_array, T*sizeof(normalized_IS_t) );
-   memcpy(message_buffer + T*sizeof(normalized_IS_t), m, mlen);
-   memcpy(message_buffer + (T*sizeof(normalized_IS_t) + mlen),
-          tree_salt,
-          HASH_DIGEST_LENGTH);
-
 #if (HASH_DIGEST_LENGTH*8 == 256)
-   sha3_256(digest,message_buffer, mlen+T*sizeof(normalized_IS_t));
+   sha3_256incctx ctx;
+   sha3_256_inc_init(&ctx);
+   sha3_256_inc_absorb(&ctx, (uint8_t *)V_array, T*sizeof(normalized_IS_t));
+   sha3_256_inc_absorb(&ctx, (uint8_t *)m, mlen);
+   sha3_256_inc_absorb(&ctx, tree_salt, HASH_DIGEST_LENGTH);
+   sha3_256_inc_finalize(digest, &ctx);
 #elif (HASH_DIGEST_LENGTH*8 == 384)
-   sha3_384(digest,message_buffer, mlen+T*sizeof(normalized_IS_t));
+   sha3_384incctx ctx;
+   sha3_384_inc_init(&ctx);
+   sha3_384_inc_absorb(&ctx, (uint8_t *)V_array, T*sizeof(normalized_IS_t));
+   sha3_384_inc_absorb(&ctx, (uint8_t *)m, mlen);
+   sha3_384_inc_absorb(&ctx, tree_salt, HASH_DIGEST_LENGTH);
+   sha3_384_inc_finalize(digest, &ctx);
 #elif (HASH_DIGEST_LENGTH*8 == 512)
-   sha3_512(digest,message_buffer, mlen+T*sizeof(normalized_IS_t));
+   sha3_512incctx ctx;
+   sha3_512_inc_init(&ctx);
+   sha3_512_inc_absorb(&ctx, (uint8_t *)V_array, T*sizeof(normalized_IS_t));
+   sha3_512_inc_absorb(&ctx, (uint8_t *)m, mlen);
+   sha3_512_inc_absorb(&ctx, tree_salt, HASH_DIGEST_LENGTH);
+   sha3_512_inc_finalize(digest, &ctx);
 #else
 #error digest length unsupported by SHA-3
 #endif
-   free(message_buffer);
 } /* end compute_digest */
 
 void compute_digest_array( uint8_t digest[HASH_DIGEST_LENGTH],
@@ -57,24 +64,30 @@ void compute_digest_array( uint8_t digest[HASH_DIGEST_LENGTH],
                      const uint64_t mlen,
                      uint8_t V_array_compressed[T*RREF_IS_COLUMNS_PACKEDBYTES],
                      const unsigned char tree_salt[HASH_DIGEST_LENGTH]) {
-   unsigned char* message_buffer = malloc( T*sizeof(normalized_IS_t)+ mlen + HASH_DIGEST_LENGTH);
-  
-   memcpy(message_buffer, V_array_compressed, T*RREF_IS_COLUMNS_PACKEDBYTES );
-   memcpy(message_buffer + T*sizeof(normalized_IS_t), m, mlen);
-   memcpy(message_buffer + (T*sizeof(normalized_IS_t) + mlen), 
-          tree_salt, 
-          HASH_DIGEST_LENGTH);
-
 #if (HASH_DIGEST_LENGTH*8 == 256)
-   sha3_256(digest,message_buffer, mlen+T*sizeof(normalized_IS_t));
+   sha3_256incctx ctx;
+   sha3_256_inc_init(&ctx);
+   sha3_256_inc_absorb(&ctx, V_array_compressed, T*RREF_IS_COLUMNS_PACKEDBYTES);
+   sha3_256_inc_absorb(&ctx, (uint8_t *)m, mlen);
+   sha3_256_inc_absorb(&ctx, tree_salt, HASH_DIGEST_LENGTH);
+   sha3_256_inc_finalize(digest, &ctx);
 #elif (HASH_DIGEST_LENGTH*8 == 384)
-   sha3_384(digest,message_buffer, mlen+T*sizeof(normalized_IS_t));
+   sha3_384incctx ctx;
+   sha3_384_inc_init(&ctx);
+   sha3_384_inc_absorb(&ctx, V_array_compressed, T*RREF_IS_COLUMNS_PACKEDBYTES);
+   sha3_384_inc_absorb(&ctx, (uint8_t *)m, mlen);
+   sha3_384_inc_absorb(&ctx, tree_salt, HASH_DIGEST_LENGTH);
+   sha3_384_inc_finalize(digest, &ctx);
 #elif (HASH_DIGEST_LENGTH*8 == 512)
-   sha3_512(digest,message_buffer, mlen+T*sizeof(normalized_IS_t));
+   sha3_512incctx ctx;
+   sha3_512_inc_init(&ctx);
+   sha3_512_inc_absorb(&ctx, V_array_compressed, T*RREF_IS_COLUMNS_PACKEDBYTES);
+   sha3_512_inc_absorb(&ctx, (uint8_t *)m, mlen);
+   sha3_512_inc_absorb(&ctx, tree_salt, HASH_DIGEST_LENGTH);
+   sha3_512_inc_finalize(digest, &ctx);
 #else
 #error digest length unsupported by SHA-3
 #endif
-   free(message_buffer);
 } /* end compute_digest */
 
 
